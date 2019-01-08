@@ -19,7 +19,7 @@
 # 
 # Run the code block below to load the wholesale customers dataset, along with a few of the necessary Python libraries required for this project. You will know the dataset loaded successfully if the size of the dataset is reported.
 
-# In[8]:
+# In[73]:
 
 
 # Import libraries necessary for this project
@@ -47,7 +47,7 @@ except:
 # 
 # Run the code block below to observe a statistical description of the dataset. Note that the dataset is composed of six important product categories: **'Fresh'**, **'Milk'**, **'Grocery'**, **'Frozen'**, **'Detergents_Paper'**, and **'Delicatessen'**. Consider what each category represents in terms of products you could purchase.
 
-# In[9]:
+# In[74]:
 
 
 # Display a description of the dataset
@@ -57,11 +57,11 @@ display(data.describe())
 # ### Implementation: Selecting Samples
 # To get a better understanding of the customers and how their data will transform through the analysis, it would be best to select a few sample data points and explore them in more detail. In the code block below, add **three** indices of your choice to the `indices` list which will represent the customers to track. It is suggested to try different sets of samples until you obtain customers that vary significantly from one another.
 
-# In[10]:
+# In[75]:
 
 
 # TODO: Select three indices of your choice you wish to sample from the dataset
-indices = [21,65,259]
+indices = [21,101,259]
 
 # Create a DataFrame of the chosen samples
 samples = pd.DataFrame(data.loc[indices], columns = data.keys()).reset_index(drop = True)
@@ -103,7 +103,7 @@ display(samples)
 #  - Import a decision tree regressor, set a `random_state`, and fit the learner to the training data.
 #  - Report the prediction score of the testing set using the regressor's `score` function.
 
-# In[44]:
+# In[76]:
 
 
 # TODO: Make a copy of the DataFrame, using the 'drop' function to drop the given feature
@@ -140,7 +140,7 @@ print(score)
 # ### Visualize Feature Distributions
 # To get a better understanding of the dataset, we can construct a scatter matrix of each of the six product features present in the data. If you found that the feature you attempted to predict above is relevant for identifying a specific customer, then the scatter matrix below may not show any correlation between that feature and the others. Conversely, if you believe that feature is not relevant for identifying a specific customer, the scatter matrix might show a correlation between that feature and another feature in the data. Run the code block below to produce a scatter matrix.
 
-# In[46]:
+# In[77]:
 
 
 # Produce a scatter matrix for each pair of features in the data
@@ -155,7 +155,23 @@ pd.plotting.scatter_matrix(data, alpha = 0.3, figsize = (14,8), diagonal = 'kde'
 # 
 # **Hint:** Is the data normally distributed? Where do most of the data points lie? You can use [corr()](https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.corr.html) to get the feature correlations and then visualize them using a [heatmap](http://seaborn.pydata.org/generated/seaborn.heatmap.html)(the data that would be fed into the heatmap would be the correlation values, for eg: `data.corr()`) to gain further insight.
 
+# In[78]:
+
+
+import seaborn as sns
+sns.heatmap(data.corr(), annot=True, fmt='+.3f')
+
+
 # **Answer:**
+# 
+# * All the features show a highly right-skewed distribution with lots of points next to 0 and some outliers with values many orders of magnitude above the average. If the model used is affected by the euclidian distance among points, then it is necessary to perform some kind of normalization on the data and come up with a way to treat the outliers.
+# 
+# * Pairs that exhibit some degree of correlation:
+#     * Milk and grocery (0.728)
+#     * Milk and detergent papers (0.662)
+#     * Grocery and detergent papers (0.925)
+# 
+# * The feature 'Fresh' has very low correlation to every other feature. This confirms the initial suspicion about the relevance of this feature.
 
 # ## Data Preprocessing
 # In this section, you will preprocess the data to create a better representation of customers by performing a scaling on the data and detecting (and optionally removing) outliers. Preprocessing data is often times a critical step in assuring that results you obtain from your analysis are significant and meaningful.
@@ -167,17 +183,17 @@ pd.plotting.scatter_matrix(data, alpha = 0.3, figsize = (14,8), diagonal = 'kde'
 #  - Assign a copy of the data to `log_data` after applying logarithmic scaling. Use the `np.log` function for this.
 #  - Assign a copy of the sample data to `log_samples` after applying logarithmic scaling. Again, use `np.log`.
 
-# In[ ]:
+# In[79]:
 
 
 # TODO: Scale the data using the natural logarithm
-log_data = None
+log_data = np.log(data.copy())
 
 # TODO: Scale the sample data using the natural logarithm
-log_samples = None
+log_samples = np.log(samples.copy())
 
 # Produce a scatter matrix for each pair of newly-transformed features
-pd.scatter_matrix(log_data, alpha = 0.3, figsize = (14,8), diagonal = 'kde');
+pd.plotting.scatter_matrix(log_data, alpha = 0.3, figsize = (14,8), diagonal = 'kde');
 
 
 # ### Observation
@@ -185,7 +201,7 @@ pd.scatter_matrix(log_data, alpha = 0.3, figsize = (14,8), diagonal = 'kde');
 # 
 # Run the code below to see how the sample data has changed after having the natural logarithm applied to it.
 
-# In[ ]:
+# In[80]:
 
 
 # Display the log-transformed sample data
@@ -204,20 +220,20 @@ display(log_samples)
 # **NOTE:** If you choose to remove any outliers, ensure that the sample data does not contain any of these points!  
 # Once you have performed this implementation, the dataset will be stored in the variable `good_data`.
 
-# In[ ]:
+# In[81]:
 
 
 # For each feature find the data points with extreme high or low values
 for feature in log_data.keys():
     
     # TODO: Calculate Q1 (25th percentile of the data) for the given feature
-    Q1 = None
+    Q1 = np.percentile(log_data[feature], 25)
     
     # TODO: Calculate Q3 (75th percentile of the data) for the given feature
-    Q3 = None
+    Q3 = np.percentile(log_data[feature], 75)
     
     # TODO: Use the interquartile range to calculate an outlier step (1.5 times the interquartile range)
-    step = None
+    step = 1.5 * (Q3 - Q1)
     
     # Display the outliers
     print("Data points considered outliers for the feature '{}':".format(feature))
@@ -235,7 +251,7 @@ good_data = log_data.drop(log_data.index[outliers]).reset_index(drop = True)
 # * Should these data points be removed from the dataset? 
 # * If any data points were added to the `outliers` list to be removed, explain why.
 # 
-# ** Hint: ** If you have datapoints that are outliers in multiple categories think about why that may be and if they warrant removal. Also note how k-means is affected by outliers and whether or not this plays a factor in your analysis of whether or not to remove them.
+# **Hint:** If you have datapoints that are outliers in multiple categories think about why that may be and if they warrant removal. Also note how k-means is affected by outliers and whether or not this plays a factor in your analysis of whether or not to remove them.
 
 # **Answer:**
 
