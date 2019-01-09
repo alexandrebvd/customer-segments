@@ -19,7 +19,7 @@
 # 
 # Run the code block below to load the wholesale customers dataset, along with a few of the necessary Python libraries required for this project. You will know the dataset loaded successfully if the size of the dataset is reported.
 
-# In[1]:
+# In[26]:
 
 
 # Import libraries necessary for this project
@@ -47,7 +47,7 @@ except:
 # 
 # Run the code block below to observe a statistical description of the dataset. Note that the dataset is composed of six important product categories: **'Fresh'**, **'Milk'**, **'Grocery'**, **'Frozen'**, **'Detergents_Paper'**, and **'Delicatessen'**. Consider what each category represents in terms of products you could purchase.
 
-# In[2]:
+# In[27]:
 
 
 # Display a description of the dataset
@@ -57,7 +57,7 @@ display(data.describe())
 # ### Implementation: Selecting Samples
 # To get a better understanding of the customers and how their data will transform through the analysis, it would be best to select a few sample data points and explore them in more detail. In the code block below, add **three** indices of your choice to the `indices` list which will represent the customers to track. It is suggested to try different sets of samples until you obtain customers that vary significantly from one another.
 
-# In[3]:
+# In[28]:
 
 
 # TODO: Select three indices of your choice you wish to sample from the dataset
@@ -103,7 +103,7 @@ display(samples)
 #  - Import a decision tree regressor, set a `random_state`, and fit the learner to the training data.
 #  - Report the prediction score of the testing set using the regressor's `score` function.
 
-# In[4]:
+# In[29]:
 
 
 # TODO: Make a copy of the DataFrame, using the 'drop' function to drop the given feature
@@ -140,7 +140,7 @@ print(score)
 # ### Visualize Feature Distributions
 # To get a better understanding of the dataset, we can construct a scatter matrix of each of the six product features present in the data. If you found that the feature you attempted to predict above is relevant for identifying a specific customer, then the scatter matrix below may not show any correlation between that feature and the others. Conversely, if you believe that feature is not relevant for identifying a specific customer, the scatter matrix might show a correlation between that feature and another feature in the data. Run the code block below to produce a scatter matrix.
 
-# In[5]:
+# In[30]:
 
 
 # Produce a scatter matrix for each pair of features in the data
@@ -155,7 +155,7 @@ pd.plotting.scatter_matrix(data, alpha = 0.3, figsize = (14,8), diagonal = 'kde'
 # 
 # **Hint:** Is the data normally distributed? Where do most of the data points lie? You can use [corr()](https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.corr.html) to get the feature correlations and then visualize them using a [heatmap](http://seaborn.pydata.org/generated/seaborn.heatmap.html)(the data that would be fed into the heatmap would be the correlation values, for eg: `data.corr()`) to gain further insight.
 
-# In[6]:
+# In[31]:
 
 
 import seaborn as sns
@@ -183,7 +183,7 @@ sns.heatmap(data.corr(), annot=True, fmt='+.3f')
 #  - Assign a copy of the data to `log_data` after applying logarithmic scaling. Use the `np.log` function for this.
 #  - Assign a copy of the sample data to `log_samples` after applying logarithmic scaling. Again, use `np.log`.
 
-# In[7]:
+# In[32]:
 
 
 # TODO: Scale the data using the natural logarithm
@@ -201,7 +201,7 @@ pd.plotting.scatter_matrix(log_data, alpha = 0.3, figsize = (14,8), diagonal = '
 # 
 # Run the code below to see how the sample data has changed after having the natural logarithm applied to it.
 
-# In[8]:
+# In[33]:
 
 
 # Display the log-transformed sample data
@@ -220,14 +220,14 @@ display(log_samples)
 # **NOTE:** If you choose to remove any outliers, ensure that the sample data does not contain any of these points!  
 # Once you have performed this implementation, the dataset will be stored in the variable `good_data`.
 
-# In[31]:
+# In[34]:
 
 
 #List of indexes for outlier data points
 outlier_index_list = []
 
 
-# In[32]:
+# In[35]:
 
 
 # For each feature find the data points with extreme high or low values
@@ -248,7 +248,7 @@ for feature in log_data.keys():
     outlier_index_list += list(log_data[~((log_data[feature] >= Q1 - step) & (log_data[feature] <= Q3 + step))].index)
 
 
-# In[38]:
+# In[36]:
 
 
 # OPTIONAL: Select the indices for data points you wish to remove
@@ -259,19 +259,19 @@ outliers  = [item for item, count in collections.Counter(outlier_index_list).ite
 good_data = log_data.drop(log_data.index[outliers]).reset_index(drop = True)
 
 
-# In[39]:
+# In[37]:
 
 
 outliers
 
 
-# In[45]:
+# In[38]:
 
 
 len(set(outlier_index_list)) #number of outlier points according to Tukey's Method
 
 
-# In[46]:
+# In[39]:
 
 
 len(data)
@@ -303,12 +303,12 @@ len(data)
 #  - Import `sklearn.decomposition.PCA` and assign the results of fitting PCA in six dimensions with `good_data` to `pca`.
 #  - Apply a PCA transformation of `log_samples` using `pca.transform`, and assign the results to `pca_samples`.
 
-# In[49]:
+# In[40]:
 
 
 # TODO: Apply PCA by fitting the good data with the same number of dimensions as features
 from sklearn.decomposition import PCA
-pca = PCA(n_components=6)
+pca = PCA(n_components=6, random_state=42)
 pca.fit(good_data)
 
 # TODO: Transform log_samples using the PCA fit above
@@ -318,9 +318,11 @@ pca_samples = pca.transform(log_samples)
 pca_results = vs.pca_results(good_data, pca)
 
 
-# In[52]:
+# In[41]:
 
 
+print(pca_results['Explained Variance'])
+print('\n')
 print(pca_results['Explained Variance'].cumsum())
 
 
@@ -333,11 +335,27 @@ print(pca_results['Explained Variance'].cumsum())
 # **Hint:** A positive increase in a specific dimension corresponds with an *increase* of the *positive-weighted* features and a *decrease* of the *negative-weighted* features. The rate of increase or decrease is based on the individual feature weights.
 
 # **Answer:**
+# 
+# * The first and second principal components explains 70.68% of the variance in the data.
+# 
+# * The first four principal components explains 93.11% of the variance in the data.
+# 
+#     * Dimension 1: cummulative variance = 44.30%. The first principal component mainly increases mainly with decreasing values of milk, grocery and detergents paper (all negative correlated).
+#     
+#     * Dimension 2: cummulative variance = 70.68%. The second principal component mainly increases with decreasing values of fresh, frozen and delicatessen.
+#     
+#     * Dimension 3: cummulative variance = 82.99%. The third princpal component mainly increases with decreasing values of fresh and increasing values of frozen and delicatessen.
+#     
+#     * Dimension 4: cummulative variance = 93.11%. The fourth principal component mainly increases with decreasing values of delicatessen and increasing values of frozen.
+#     
+#     * Dimension 5: cummulative variance = 97.96%. The fifth principal component mainly increases with increasing values of fresh and grocery and decreasing values of detergents paper.
+#     
+#     * Dimension 6: cummulative variance = 100.00%. The sixth principal component mainly increases with decreasing values of milk and increasing values of grocery.
 
 # ### Observation
 # Run the code below to see how the log-transformed sample data has changed after having a PCA transformation applied to it in six dimensions. Observe the numerical value for the first four dimensions of the sample points. Consider if this is consistent with your initial interpretation of the sample points.
 
-# In[ ]:
+# In[42]:
 
 
 # Display sample log-data after having a PCA transformation applied
@@ -352,17 +370,17 @@ display(pd.DataFrame(np.round(pca_samples, 4), columns = pca_results.index.value
 #  - Apply a PCA transformation of `good_data` using `pca.transform`, and assign the results to `reduced_data`.
 #  - Apply a PCA transformation of `log_samples` using `pca.transform`, and assign the results to `pca_samples`.
 
-# In[ ]:
+# In[43]:
 
 
 # TODO: Apply PCA by fitting the good data with only two dimensions
-pca = None
+pca = PCA(n_components=2, random_state=42).fit(good_data)
 
 # TODO: Transform the good data using the PCA fit above
-reduced_data = None
+reduced_data = pca.transform(good_data)
 
 # TODO: Transform log_samples using the PCA fit above
-pca_samples = None
+pca_samples = pca.transform(log_samples)
 
 # Create a DataFrame for the reduced data
 reduced_data = pd.DataFrame(reduced_data, columns = ['Dimension 1', 'Dimension 2'])
@@ -371,7 +389,7 @@ reduced_data = pd.DataFrame(reduced_data, columns = ['Dimension 1', 'Dimension 2
 # ### Observation
 # Run the code below to see how the log-transformed sample data has changed after having a PCA transformation applied to it using only two dimensions. Observe how the values for the first two dimensions remains unchanged when compared to a PCA transformation in six dimensions.
 
-# In[ ]:
+# In[44]:
 
 
 # Display sample log-data after applying PCA transformation in two dimensions
@@ -383,7 +401,7 @@ display(pd.DataFrame(np.round(pca_samples, 4), columns = ['Dimension 1', 'Dimens
 # 
 # Run the code cell below to produce a biplot of the reduced-dimension data.
 
-# In[ ]:
+# In[45]:
 
 
 # Create a biplot
@@ -392,9 +410,11 @@ vs.biplot(good_data, reduced_data, pca)
 
 # ### Observation
 # 
-# Once we have the original feature projections (in red), it is easier to interpret the relative position of each data point in the scatterplot. For instance, a point the lower right corner of the figure will likely correspond to a customer that spends a lot on `'Milk'`, `'Grocery'` and `'Detergents_Paper'`, but not so much on the other product categories. 
+# Once we have the original feature projections (in red), it is easier to interpret the relative position of each data point in the scatterplot. For instance, a point the lower left corner of the figure will likely correspond to a customer that spends a lot on `'Milk'`, `'Grocery'` and `'Detergents_Paper'`, but not so much on the other product categories. 
 # 
 # From the biplot, which of the original features are most strongly correlated with the first component? What about those that are associated with the second component? Do these observations agree with the pca_results plot you obtained earlier?
+
+# **Answer:** Detergent paper is most strongly correlated with the first component (negative correlation). Fresh is most strongly correlated with the second component (negative correlation). The observations agree with pca_results plots.
 
 # ## Clustering
 # 
@@ -409,6 +429,22 @@ vs.biplot(good_data, reduced_data, pca)
 # ** Hint: ** Think about the differences between hard clustering and soft clustering and which would be appropriate for our dataset.
 
 # **Answer:**
+# 
+# * K-Means algorithm advantages:
+#     * K Means clustering can handle large datasets due to linearity of time complexity, i.e. O(n).
+#     * K Means is found to work well when the shape of the clusters is hyper spherical (like circle in 2D, sphere in 3D)
+#     * Easy to interpret
+# 
+# * Gaussian Mixture Model clustering algorithm advantages:
+#     * Clusters are not assumed to have a prior known geometry. It works well with non-linear geometric distributions.
+#     * It is not necessary to know how many clusters exist in the data.
+#     * A “soft” classification is available. Each point have associated probabilities of belonging to each cluster.
+# 
+# * The data points don't show a clear number of clusters to the human eye. Thus, the chosen algorithm will be the Gaussian Mixture Model.
+# 
+# References:
+# [1](https://www.quora.com/What-is-the-difference-between-K-means-and-the-mixture-model-of-Gaussian)
+# [2](https://towardsdatascience.com/unsupervised-learning-and-data-clustering-eeecb78b422a)
 
 # ### Implementation: Creating Clusters
 # Depending on the problem, the number of clusters that you expect to be in the data may already be known. When the number of clusters is not known *a priori*, there is no guarantee that a given number of clusters best segments the data, since it is unclear what structure exists in the data — if any. However, we can quantify the "goodness" of a clustering by calculating each data point's *silhouette coefficient*. The [silhouette coefficient](http://scikit-learn.org/stable/modules/generated/sklearn.metrics.silhouette_score.html) for a data point measures how similar it is to its assigned cluster from -1 (dissimilar) to 1 (similar). Calculating the *mean* silhouette coefficient provides for a simple scoring method of a given clustering.
@@ -421,23 +457,30 @@ vs.biplot(good_data, reduced_data, pca)
 #  - Import `sklearn.metrics.silhouette_score` and calculate the silhouette score of `reduced_data` against `preds`.
 #    - Assign the silhouette score to `score` and print the result.
 
-# In[ ]:
+# In[55]:
 
 
-# TODO: Apply your clustering algorithm of choice to the reduced data 
-clusterer = None
+from sklearn.mixture import GaussianMixture
+from sklearn.metrics import silhouette_score
 
-# TODO: Predict the cluster for each data point
-preds = None
+print('Number of clusters and Silhouette scores')
+for i in range(2, 40):
+    # TODO: Apply your clustering algorithm of choice to the reduced data 
+    clusterer = GaussianMixture(n_components=i, covariance_type='full', random_state=28).fit(reduced_data)
 
-# TODO: Find the cluster centers
-centers = None
+    # TODO: Predict the cluster for each data point
+    preds = clusterer.predict(reduced_data)
 
-# TODO: Predict the cluster for each transformed sample data point
-sample_preds = None
+    # TODO: Find the cluster centers
+    centers = clusterer.means_
 
-# TODO: Calculate the mean silhouette coefficient for the number of clusters chosen
-score = None
+    # TODO: Predict the cluster for each transformed sample data point
+    sample_preds = clusterer.predict(pca_samples)
+
+    # TODO: Calculate the mean silhouette coefficient for the number of clusters chosen
+    score = silhouette_score(reduced_data, preds)
+
+    print('{}: {}'.format(i, score))
 
 
 # ### Question 7
@@ -445,7 +488,7 @@ score = None
 # * Report the silhouette score for several cluster numbers you tried. 
 # * Of these, which number of clusters has the best silhouette score?
 
-# **Answer:**
+# **Answer:** The scores from 2 to 39 clusters are above. The best score was for 2 clusters (0.422).
 
 # ### Cluster Visualization
 # Once you've chosen the optimal number of clusters for your clustering algorithm using the scoring metric above, you can now visualize the results by executing the code block below. Note that, for experimentation purposes, you are welcome to adjust the number of clusters for your clustering algorithm to see various visualizations. The final visualization provided should, however, correspond with the optimal number of clusters. 
