@@ -19,7 +19,7 @@
 # 
 # Run the code block below to load the wholesale customers dataset, along with a few of the necessary Python libraries required for this project. You will know the dataset loaded successfully if the size of the dataset is reported.
 
-# In[73]:
+# In[1]:
 
 
 # Import libraries necessary for this project
@@ -47,7 +47,7 @@ except:
 # 
 # Run the code block below to observe a statistical description of the dataset. Note that the dataset is composed of six important product categories: **'Fresh'**, **'Milk'**, **'Grocery'**, **'Frozen'**, **'Detergents_Paper'**, and **'Delicatessen'**. Consider what each category represents in terms of products you could purchase.
 
-# In[74]:
+# In[2]:
 
 
 # Display a description of the dataset
@@ -57,7 +57,7 @@ display(data.describe())
 # ### Implementation: Selecting Samples
 # To get a better understanding of the customers and how their data will transform through the analysis, it would be best to select a few sample data points and explore them in more detail. In the code block below, add **three** indices of your choice to the `indices` list which will represent the customers to track. It is suggested to try different sets of samples until you obtain customers that vary significantly from one another.
 
-# In[75]:
+# In[3]:
 
 
 # TODO: Select three indices of your choice you wish to sample from the dataset
@@ -103,7 +103,7 @@ display(samples)
 #  - Import a decision tree regressor, set a `random_state`, and fit the learner to the training data.
 #  - Report the prediction score of the testing set using the regressor's `score` function.
 
-# In[76]:
+# In[4]:
 
 
 # TODO: Make a copy of the DataFrame, using the 'drop' function to drop the given feature
@@ -140,7 +140,7 @@ print(score)
 # ### Visualize Feature Distributions
 # To get a better understanding of the dataset, we can construct a scatter matrix of each of the six product features present in the data. If you found that the feature you attempted to predict above is relevant for identifying a specific customer, then the scatter matrix below may not show any correlation between that feature and the others. Conversely, if you believe that feature is not relevant for identifying a specific customer, the scatter matrix might show a correlation between that feature and another feature in the data. Run the code block below to produce a scatter matrix.
 
-# In[77]:
+# In[5]:
 
 
 # Produce a scatter matrix for each pair of features in the data
@@ -155,7 +155,7 @@ pd.plotting.scatter_matrix(data, alpha = 0.3, figsize = (14,8), diagonal = 'kde'
 # 
 # **Hint:** Is the data normally distributed? Where do most of the data points lie? You can use [corr()](https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.corr.html) to get the feature correlations and then visualize them using a [heatmap](http://seaborn.pydata.org/generated/seaborn.heatmap.html)(the data that would be fed into the heatmap would be the correlation values, for eg: `data.corr()`) to gain further insight.
 
-# In[78]:
+# In[6]:
 
 
 import seaborn as sns
@@ -183,7 +183,7 @@ sns.heatmap(data.corr(), annot=True, fmt='+.3f')
 #  - Assign a copy of the data to `log_data` after applying logarithmic scaling. Use the `np.log` function for this.
 #  - Assign a copy of the sample data to `log_samples` after applying logarithmic scaling. Again, use `np.log`.
 
-# In[79]:
+# In[7]:
 
 
 # TODO: Scale the data using the natural logarithm
@@ -201,7 +201,7 @@ pd.plotting.scatter_matrix(log_data, alpha = 0.3, figsize = (14,8), diagonal = '
 # 
 # Run the code below to see how the sample data has changed after having the natural logarithm applied to it.
 
-# In[80]:
+# In[8]:
 
 
 # Display the log-transformed sample data
@@ -220,7 +220,14 @@ display(log_samples)
 # **NOTE:** If you choose to remove any outliers, ensure that the sample data does not contain any of these points!  
 # Once you have performed this implementation, the dataset will be stored in the variable `good_data`.
 
-# In[81]:
+# In[31]:
+
+
+#List of indexes for outlier data points
+outlier_index_list = []
+
+
+# In[32]:
 
 
 # For each feature find the data points with extreme high or low values
@@ -238,12 +245,36 @@ for feature in log_data.keys():
     # Display the outliers
     print("Data points considered outliers for the feature '{}':".format(feature))
     display(log_data[~((log_data[feature] >= Q1 - step) & (log_data[feature] <= Q3 + step))])
-    
+    outlier_index_list += list(log_data[~((log_data[feature] >= Q1 - step) & (log_data[feature] <= Q3 + step))].index)
+
+
+# In[38]:
+
+
 # OPTIONAL: Select the indices for data points you wish to remove
-outliers  = []
+import collections
+outliers  = [item for item, count in collections.Counter(outlier_index_list).items() if count > 1]
 
 # Remove the outliers, if any were specified
 good_data = log_data.drop(log_data.index[outliers]).reset_index(drop = True)
+
+
+# In[39]:
+
+
+outliers
+
+
+# In[45]:
+
+
+len(set(outlier_index_list)) #number of outlier points according to Tukey's Method
+
+
+# In[46]:
+
+
+len(data)
 
 
 # ### Question 4
@@ -254,6 +285,12 @@ good_data = log_data.drop(log_data.index[outliers]).reset_index(drop = True)
 # **Hint:** If you have datapoints that are outliers in multiple categories think about why that may be and if they warrant removal. Also note how k-means is affected by outliers and whether or not this plays a factor in your analysis of whether or not to remove them.
 
 # **Answer:**
+# 
+# * Yes, there are 42 outliers according to Tukey's Method.
+# 
+# * I chose to remove points that appeared in more than one feature to avoid losing too much information. The number of outliers using Tukey's Method accounts for almost 10% of the data.
+# 
+# * Points with indexes 65, 66, 128, 154, 75 were added to the `outliers` list because they are outliers in more than one feature at the same time, which could impact the model result. The other outlier data points were left in the data set in order to preserve the sample size and the model result.
 
 # ## Feature Transformation
 # In this section you will use principal component analysis (PCA) to draw conclusions about the underlying structure of the wholesale customer data. Since using PCA on a dataset calculates the dimensions which best maximize variance, we will find which compound combinations of features best describe customers.
@@ -266,17 +303,25 @@ good_data = log_data.drop(log_data.index[outliers]).reset_index(drop = True)
 #  - Import `sklearn.decomposition.PCA` and assign the results of fitting PCA in six dimensions with `good_data` to `pca`.
 #  - Apply a PCA transformation of `log_samples` using `pca.transform`, and assign the results to `pca_samples`.
 
-# In[ ]:
+# In[49]:
 
 
 # TODO: Apply PCA by fitting the good data with the same number of dimensions as features
-pca = None
+from sklearn.decomposition import PCA
+pca = PCA(n_components=6)
+pca.fit(good_data)
 
 # TODO: Transform log_samples using the PCA fit above
-pca_samples = None
+pca_samples = pca.transform(log_samples)
 
 # Generate PCA results plot
 pca_results = vs.pca_results(good_data, pca)
+
+
+# In[52]:
+
+
+print(pca_results['Explained Variance'].cumsum())
 
 
 # ### Question 5
