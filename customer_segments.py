@@ -607,7 +607,7 @@ for i, pred in enumerate(sample_preds):
 # 
 # **Hint:** A supervised learner could be used to train on the original customers. What would be the target variable?
 
-# **Answer:**
+# **Answer:** The wholesale distributor can add the new feature 'customer segment' as a label for the old customers dataset and train a supervised learning model like SVM or Decision Tree on the modified dataset. If the model performance is good, it will be able to predict the labels for the new data points (new customers) with a fairly good accuracy based on their estimates for anticipated annual spending.
 
 # ### Visualizing Underlying Distributions
 # 
@@ -615,7 +615,7 @@ for i, pred in enumerate(sample_preds):
 # 
 # Run the code block below to see how each data point is labeled either `'HoReCa'` (Hotel/Restaurant/Cafe) or `'Retail'` the reduced space. In addition, you will find the sample points are circled in the plot, which will identify their labeling.
 
-# In[ ]:
+# In[31]:
 
 
 # Display the clustering results based on 'Channel' data
@@ -629,6 +629,10 @@ vs.channel_results(reduced_data, outliers, pca_samples)
 # * Would you consider these classifications as consistent with your previous definition of the customer segments?
 
 # **Answer:**
+# 
+# * The clustering algorithm shows a similar split of the data points, however it is not able to correctly classify points that are closer to the other cluster centroid than its own centroid. The real data shows that the clusters have some overlapping points that were not predicted by the clustering algorithm.
+# * I would say that the graph makes it possible to classify customer segments as purely 'Retailers' for dimension_1 < -3 (this was the last observation of a hotel/restaurant/cafe) and as purely 'Hotels/Restaurants/Cafes' for dimension_1 > 2 (last observation of a 'Retailer').
+# * The classifications are very consistent with the previous definition of customer segments.
 
 # > **Note**: Once you have completed all of the code implementations and successfully answered each question above, you may finalize your work by exporting the iPython Notebook as an HTML document. You can do this by using the menu above and navigating to  
 # **File -> Download as -> HTML (.html)**. Include the finished document along with this notebook as your submission.
